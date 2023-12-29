@@ -17,7 +17,27 @@
   </body>
 
   <div>
-    <input type="number" id="positionx" value="0" name="positionx" />
-    <label for="positionx">X</label>
+    <div>
+      <input
+        type="range"
+        id="threshold"
+        value="30"
+        name="threshold"
+        min="0"
+        max="100"
+      />
+      <label for="volume">Threshold</label>
+    </div>
+    <div>
+      <input
+        type="range"
+        id="scale"
+        value="100"
+        name="scale"
+        min="0"
+        max="300"
+      />
+      <label for="volume">Scale</label>
+    </div>
   </div>
 </html>

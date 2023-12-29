@@ -66,9 +66,9 @@ export class GroundSimulation extends World {
       geometry.computeVertexNormals();
 
       const mesh = new Mesh(geometry, this.chunkMaterial);
-      mesh.position.x = index.x * (CHUNK_SIZE + 3);
-      mesh.position.y = index.y * (CHUNK_SIZE + 3);
-      mesh.position.z = index.z * (CHUNK_SIZE + 3);
+      mesh.position.x = index.x * CHUNK_SIZE;
+      mesh.position.y = index.y * CHUNK_SIZE;
+      mesh.position.z = index.z * CHUNK_SIZE;
 
       // mesh.castShadow = true
       // mesh.receiveShadow = true
