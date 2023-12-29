@@ -37,18 +37,18 @@ export class GroundSimulation extends World {
     this.chunkMeshList.splice(0, this.chunkMeshList.length);
   }
 
-  public drawChunks(offset: Vector3) {
+  public drawChunks() {
     for (let x = -WORLD_H_DRAW_DISTANCE; x < WORLD_H_DRAW_DISTANCE; x++) {
       for (let y = 0; y < WORLD_V_DRAW_DISTANCE; y++) {
         for (let z = -WORLD_H_DRAW_DISTANCE; z < WORLD_H_DRAW_DISTANCE; z++) {
-          this.addChunk(new Vector3(x, y, z), offset);
+          this.addChunk(new Vector3(x, y, z));
         }
       }
     }
   }
 
-  private addChunk(index: Vector3, offset: Vector3) {
-    const chunk = new Chunk(index, offset.x).calculate();
+  private addChunk(index: Vector3) {
+    const chunk = new Chunk(index).calculate();
 
     if (chunk.triangles.length) {
       const geometry = new BufferGeometry();
@@ -66,9 +66,9 @@ export class GroundSimulation extends World {
       geometry.computeVertexNormals();
 
       const mesh = new Mesh(geometry, this.chunkMaterial);
-      mesh.position.x = index.x * CHUNK_SIZE;
-      mesh.position.y = index.y * CHUNK_SIZE;
-      mesh.position.z = index.z * CHUNK_SIZE;
+      mesh.position.x = index.x * (CHUNK_SIZE + 3);
+      mesh.position.y = index.y * (CHUNK_SIZE + 3);
+      mesh.position.z = index.z * (CHUNK_SIZE + 3);
 
       // mesh.castShadow = true
       // mesh.receiveShadow = true

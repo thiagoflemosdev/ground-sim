@@ -12,10 +12,10 @@ async function init() {
     ?.addEventListener("input", (e: Event) => {
       world.clearChunks();
       //@ts-ignore
-      world.drawChunks(new Vector3(Number(e.target?.value), 0, 0));
+      world.drawChunks();
     });
 
-  world.drawChunks(new Vector3(0, 0, 0));
+  world.drawChunks();
 }
 
 init();
