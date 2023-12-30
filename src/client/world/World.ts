@@ -1,29 +1,27 @@
 import {
   Color,
   DirectionalLight,
-  DirectionalLightHelper,
   PerspectiveCamera,
   Scene,
-  sRGBEncoding,
   WebGLRenderer,
-  CameraHelper,
+  sRGBEncoding,
 } from "three";
-import { MapControls } from "three/examples/jsm/controls/OrbitControls";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 export class World {
   protected scene = new Scene();
   protected camera = new PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
-    0.1,
-    1000
+    0.1
   );
   protected renderer = new WebGLRenderer();
-  protected controls = new MapControls(this.camera, this.renderer.domElement);
+  protected controls = new OrbitControls(this.camera, this.renderer.domElement);
 
-  constructor() {
-    this.camera.position.z = 0;
-    this.camera.position.y = 35;
+  public init() {
+    this.camera.position.x = 15;
+    this.camera.position.z = -15;
+    this.camera.position.y = 15;
 
     this.camera.lookAt(0, 0, 0);
 
@@ -45,6 +43,11 @@ export class World {
 
     this.scene.add(light);
     this.scene.add(offLight);
+
+    light.shadow.mapSize.width = 1000;
+    light.shadow.mapSize.height = 1000;
+    light.shadow.camera.near = 0;
+    light.shadow.camera.far = 10000;
 
     document.body.appendChild(this.renderer.domElement);
     window.addEventListener("resize", () => this.onWindowResize(), false);

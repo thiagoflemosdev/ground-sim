@@ -1,81 +1,74 @@
 import {
-  BufferGeometry,
-  Float32BufferAttribute,
+  CircleGeometry,
   Mesh,
   MeshStandardMaterial,
+  PlaneGeometry,
+  SphereGeometry,
   Vector3,
 } from "three";
-import {
-  CHUNK_SIZE,
-  WORLD_H_DRAW_DISTANCE,
-  WORLD_V_DRAW_DISTANCE,
-} from "../config/constants";
-import { Chunk } from "./Chunk";
-import { World } from "./World";
+import { PARTICLES_SPAWNER, PARTICLE_RADIUS } from "../config/constants";
 import { AssetsController } from "../controllers/AssetsController";
+import { World } from "./World";
+import { Particle } from "./Particle";
 
 export class GroundSimulation extends World {
-  private chunkMeshList: Mesh[] = [];
-  private chunkMaterial: MeshStandardMaterial;
+  private particlesList: Particle[] = [];
+  private particlesMaterial: MeshStandardMaterial;
 
   constructor() {
     super();
 
-    this.chunkMaterial = new MeshStandardMaterial({
-      color: 0xffffff,
-      map: AssetsController.grassTexture,
-      vertexColors: true,
+    this.particlesMaterial = new MeshStandardMaterial({
+      color: 0xff0000,
     });
   }
 
-  public clearChunks() {
-    this.chunkMeshList.forEach((mesh) => {
-      mesh.geometry.dispose();
-      this.scene.remove(mesh);
-    });
+  public init() {
+    super.init();
 
-    this.chunkMeshList.splice(0, this.chunkMeshList.length);
+    const geometry = new PlaneGeometry(100, 100);
+    const mesh = new Mesh(
+      geometry,
+      new MeshStandardMaterial({
+        color: 0xcccccc,
+      })
+    );
+    mesh.rotation.x = Math.PI / -2;
+    mesh.position.y = -PARTICLE_RADIUS;
+    mesh.receiveShadow = true;
+    this.scene.add(mesh);
   }
 
-  public drawChunks() {
-    for (let x = -WORLD_H_DRAW_DISTANCE; x < WORLD_H_DRAW_DISTANCE; x++) {
-      for (let y = 0; y < WORLD_V_DRAW_DISTANCE; y++) {
-        for (let z = -WORLD_H_DRAW_DISTANCE; z < WORLD_H_DRAW_DISTANCE; z++) {
-          this.addChunk(new Vector3(x, y, z));
+  public clearParticles() {
+    this.particlesList.forEach((particle) => {
+      particle.mesh.geometry.dispose();
+      this.scene.remove(particle.mesh);
+    });
+
+    this.particlesList.splice(0, this.particlesList.length);
+  }
+
+  public drawParticles() {
+    for (let x = 0; x < PARTICLES_SPAWNER.width; x++) {
+      for (let y = 0; y < PARTICLES_SPAWNER.height; y++) {
+        for (let z = 0; z < PARTICLES_SPAWNER.depth; z++) {
+          this.addParticle(new Vector3(x, y + PARTICLES_SPAWNER.elevation, z));
         }
       }
     }
   }
 
-  private addChunk(index: Vector3) {
-    const chunk = new Chunk(index).calculate();
+  private addParticle(position: Vector3) {
+    const particle = new Particle(position, this.particlesMaterial);
+    this.scene.add(particle.mesh);
+    this.particlesList.push(particle);
+  }
 
-    if (chunk.triangles.length) {
-      const geometry = new BufferGeometry();
+  protected update() {
+    super.update();
 
-      geometry.setAttribute(
-        "position",
-        new Float32BufferAttribute(chunk.triangles, 3)
-      );
-      geometry.setAttribute("uv", new Float32BufferAttribute(chunk.uv, 2));
-      geometry.setAttribute(
-        "color",
-        new Float32BufferAttribute(chunk.colors, 3)
-      );
-
-      geometry.computeVertexNormals();
-
-      const mesh = new Mesh(geometry, this.chunkMaterial);
-      mesh.position.x = index.x * CHUNK_SIZE;
-      mesh.position.y = index.y * CHUNK_SIZE;
-      mesh.position.z = index.z * CHUNK_SIZE;
-
-      // mesh.castShadow = true
-      // mesh.receiveShadow = true
-
-      this.scene.add(mesh);
-
-      this.chunkMeshList.push(mesh);
-    }
+    this.particlesList.forEach((element) => {
+      element.update();
+    });
   }
 }
