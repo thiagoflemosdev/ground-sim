@@ -1,27 +1,16 @@
+import { Mesh, MeshStandardMaterial, PlaneGeometry, Vector3 } from "three";
 import {
-  CircleGeometry,
-  Mesh,
-  MeshStandardMaterial,
-  PlaneGeometry,
-  SphereGeometry,
-  Vector3,
-} from "three";
-import { PARTICLES_SPAWNER, PARTICLE_RADIUS } from "../config/constants";
-import { AssetsController } from "../controllers/AssetsController";
-import { World } from "./World";
+  MIN_DENSITY,
+  PARTICLES_SPAWNER_ATTRIBUTES,
+  PARTICLE_RADIUS,
+  SIMULATION_ATTRIBUTES,
+} from "../config/constants";
+import { randomRange } from "../utils/math";
 import { Particle } from "./Particle";
+import { World } from "./World";
 
 export class GroundSimulation extends World {
   private particlesList: Particle[] = [];
-  private particlesMaterial: MeshStandardMaterial;
-
-  constructor() {
-    super();
-
-    this.particlesMaterial = new MeshStandardMaterial({
-      color: 0xff0000,
-    });
-  }
 
   public init() {
     super.init();
@@ -49,17 +38,28 @@ export class GroundSimulation extends World {
   }
 
   public drawParticles() {
-    for (let x = 0; x < PARTICLES_SPAWNER.width; x++) {
-      for (let y = 0; y < PARTICLES_SPAWNER.height; y++) {
-        for (let z = 0; z < PARTICLES_SPAWNER.depth; z++) {
-          this.addParticle(new Vector3(x, y + PARTICLES_SPAWNER.elevation, z));
-        }
-      }
+    for (let x = 0; x < PARTICLES_SPAWNER_ATTRIBUTES.quantity; x++) {
+      // cos(angle)*radius;
+      // sin(angle)*radius;
+
+      this.addParticle(
+        new Vector3(
+          randomRange(
+            -PARTICLES_SPAWNER_ATTRIBUTES.range,
+            PARTICLES_SPAWNER_ATTRIBUTES.range
+          ),
+          randomRange(0, PARTICLES_SPAWNER_ATTRIBUTES.range),
+          randomRange(
+            -PARTICLES_SPAWNER_ATTRIBUTES.range,
+            PARTICLES_SPAWNER_ATTRIBUTES.range
+          )
+        )
+      );
     }
   }
 
   private addParticle(position: Vector3) {
-    const particle = new Particle(position, this.particlesMaterial);
+    const particle = new Particle(position);
     this.scene.add(particle.mesh);
     this.particlesList.push(particle);
   }
@@ -67,8 +67,37 @@ export class GroundSimulation extends World {
   protected update() {
     super.update();
 
+    this.calculateDensities();
+
     this.particlesList.forEach((element) => {
       element.update();
     });
+  }
+
+  private calculateDensities() {
+    this.particlesList.forEach((particle, i) => {
+      let d = MIN_DENSITY;
+      this.particlesList.forEach((v, i2) => {
+        if (i != i2) {
+          const dst = particle.mesh.position.distanceTo(v.mesh.position);
+
+          d += this.getInfluenceValue(dst);
+        }
+      });
+
+      particle.density = d;
+    });
+  }
+
+  private getInfluenceValue(dst: number) {
+    const radius = SIMULATION_ATTRIBUTES.influenceRadius;
+
+    if (dst < radius) {
+      const scale = 15 / (2 * Math.PI * Math.pow(radius, 5));
+      const v = radius - dst;
+      return v * v * scale;
+    }
+
+    return 0;
   }
 }

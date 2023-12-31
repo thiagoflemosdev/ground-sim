@@ -1,4 +1,5 @@
 import {
+  CameraHelper,
   Color,
   DirectionalLight,
   PerspectiveCamera,
@@ -22,7 +23,6 @@ export class World {
     this.camera.position.x = 15;
     this.camera.position.z = -15;
     this.camera.position.y = 15;
-
     this.camera.lookAt(0, 0, 0);
 
     this.renderer.outputEncoding = sRGBEncoding;
@@ -35,24 +35,25 @@ export class World {
     const light = new DirectionalLight(0xffffff, 1);
     light.position.set(60, 100, 40);
     light.target.position.set(0, 30, 0);
+
     light.castShadow = true;
+    light.shadow.camera.top = 20;
+    light.shadow.camera.left = -20;
+    light.shadow.camera.right = 20;
+    light.shadow.camera.bottom = -20;
+    this.scene.add(light);
 
     const offLight = new DirectionalLight(0xdfeaf5, 0.8);
     offLight.position.set(0, 30, 0);
     offLight.target.position.set(60, 100, 40);
-
-    this.scene.add(light);
     this.scene.add(offLight);
-
-    light.shadow.mapSize.width = 1000;
-    light.shadow.mapSize.height = 1000;
-    light.shadow.camera.near = 0;
-    light.shadow.camera.far = 10000;
 
     document.body.appendChild(this.renderer.domElement);
     window.addEventListener("resize", () => this.onWindowResize(), false);
 
     this.renderer.setAnimationLoop(() => this.update());
+
+    // this.scene.add(new CameraHelper(light.shadow.camera));
 
     this.update();
   }
