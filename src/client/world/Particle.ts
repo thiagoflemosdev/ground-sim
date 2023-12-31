@@ -2,23 +2,24 @@ import {
   Color,
   Mesh,
   MeshStandardMaterial,
-  RGBAFormat,
   SphereGeometry,
   Vector3,
 } from "three";
 import {
   GRAVITY_VALUE,
   MIN_DENSITY,
+  PARTICLES_SPAWNER_ATTRIBUTES,
   PARTICLE_RADIUS,
   SIMULATION_ATTRIBUTES,
   VELOCITY_DAMPEN_VALUE,
 } from "../config/constants";
-import { colorLerp, randomRange } from "../utils/math";
+import { colorLerp } from "../utils/math";
 
 export class Particle {
   public mesh: Mesh<SphereGeometry, MeshStandardMaterial>;
   public velocity = new Vector3();
   public density: number = MIN_DENSITY;
+  public predictedPosition: Vector3;
 
   constructor(position: Vector3) {
     const geometry = new SphereGeometry(PARTICLE_RADIUS);
@@ -34,6 +35,8 @@ export class Particle {
     this.mesh.position.z = position.z;
 
     this.mesh.castShadow = true;
+
+    this.predictedPosition = position;
   }
 
   public update() {
@@ -45,14 +48,13 @@ export class Particle {
 
     this.mesh.material.color = this.getColor();
 
-    if (this.mesh.position.y < 0) {
-      this.mesh.position.y = 0;
-      this.velocity.set(
-        this.velocity.x,
-        -this.velocity.y * VELOCITY_DAMPEN_VALUE,
-        this.velocity.z
-      );
-    }
+    this.checkCollisions();
+  }
+
+  public calculatePredictedPosition() {
+    this.predictedPosition = new Vector3()
+      .add(this.mesh.position)
+      .add(this.velocity);
   }
 
   private getColor() {
@@ -69,5 +71,43 @@ export class Particle {
         this.density / SIMULATION_ATTRIBUTES.targetDensity
       );
     }
+  }
+
+  private checkCollisions() {
+    const position = new Vector3().add(this.mesh.position);
+    const velocity = new Vector3().add(this.velocity);
+
+    if (this.mesh.position.y < 0) {
+      position.y = 0;
+      velocity.y = -this.velocity.y * VELOCITY_DAMPEN_VALUE;
+    } else if (this.mesh.position.y > PARTICLES_SPAWNER_ATTRIBUTES.height) {
+      // position.y = PARTICLES_SPAWNER_ATTRIBUTES.height;
+      velocity.y = -this.velocity.y * VELOCITY_DAMPEN_VALUE;
+    }
+
+    if (Math.abs(this.mesh.position.x) > PARTICLES_SPAWNER_ATTRIBUTES.width) {
+      // position.x =
+      //   this.mesh.position.x > PARTICLES_SPAWNER_ATTRIBUTES.width
+      //     ? PARTICLES_SPAWNER_ATTRIBUTES.width
+      //     : -PARTICLES_SPAWNER_ATTRIBUTES.width;
+
+      velocity.x = -this.velocity.x * VELOCITY_DAMPEN_VALUE;
+    }
+
+    if (Math.abs(this.mesh.position.z) > PARTICLES_SPAWNER_ATTRIBUTES.depth) {
+      // position.z =
+      //   this.mesh.position.z > PARTICLES_SPAWNER_ATTRIBUTES.depth
+      //     ? PARTICLES_SPAWNER_ATTRIBUTES.depth
+      //     : -PARTICLES_SPAWNER_ATTRIBUTES.depth;
+
+      velocity.z = -this.velocity.z * VELOCITY_DAMPEN_VALUE;
+    }
+
+    this.mesh.position.set(position.x, position.y, position.z);
+    this.velocity.set(velocity.x, velocity.y, velocity.z);
+  }
+
+  public get position() {
+    return this.mesh.position;
   }
 }

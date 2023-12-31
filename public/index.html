@@ -18,20 +18,35 @@
 
   <div>
     <div>
-      <input type="range" id="quantity" value="200" min="0" max="5000" />
-      <label for="volume">Quantity</label>
-    </div>
-    <div>
-      <input type="range" id="range" value="10" min="0" max="100" />
-      <label for="volume">Range</label>
-    </div>
-    <div>
-      <input type="range" id="influenceRadius" value="1" min="0" max="5" />
+      <div>
+        <label for="volume">Width</label>
+        <input type="range" id="width" value="10" min="0" max="100" />
+        <label for="volume">Depth</label>
+        <input type="range" id="depth" value="10" min="0" max="100" />
+        <label for="volume">Height</label>
+        <input type="range" id="height" value="10" min="0" max="100" />
+      </div>
+      <div>
+        <label for="volume">Quantity</label>
+        <input type="range" id="quantity" value="200" min="0" max="5000" />
+      </div>
       <label for="volume">Influence radius</label>
+      <input type="range" id="influenceRadius" value="1" min="0" max="5" />
     </div>
     <div>
-      <input type="range" id="targetDensity" value="20" min="0" max="200" />
       <label for="volume">Target Density</label>
+      <input type="range" id="targetDensity" value="20" min="0" max="200" />
+    </div>
+    <div>
+      <label for="volume">Pressure Multiplier</label>
+      <input
+        type="range"
+        id="pressureMultiplier"
+        value="100"
+        min="0"
+        max="1000"
+      />
     </div>
   </div>
+  <button id="reset">Reset</button>
 </html>

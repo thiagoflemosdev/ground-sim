@@ -45,13 +45,13 @@ export class GroundSimulation extends World {
       this.addParticle(
         new Vector3(
           randomRange(
-            -PARTICLES_SPAWNER_ATTRIBUTES.range,
-            PARTICLES_SPAWNER_ATTRIBUTES.range
+            -PARTICLES_SPAWNER_ATTRIBUTES.width,
+            PARTICLES_SPAWNER_ATTRIBUTES.width
           ),
-          randomRange(0, PARTICLES_SPAWNER_ATTRIBUTES.range),
+          randomRange(0, PARTICLES_SPAWNER_ATTRIBUTES.height),
           randomRange(
-            -PARTICLES_SPAWNER_ATTRIBUTES.range,
-            PARTICLES_SPAWNER_ATTRIBUTES.range
+            -PARTICLES_SPAWNER_ATTRIBUTES.depth,
+            PARTICLES_SPAWNER_ATTRIBUTES.depth
           )
         )
       );
@@ -67,6 +67,10 @@ export class GroundSimulation extends World {
   protected update() {
     super.update();
 
+    this.particlesList.forEach((element) => {
+      element.calculatePredictedPosition();
+    });
+
     this.calculateDensities();
 
     this.applyPressureToAllParticles();
@@ -81,7 +85,9 @@ export class GroundSimulation extends World {
       let d = MIN_DENSITY;
       this.particlesList.forEach((v, i2) => {
         if (i != i2) {
-          const dst = particle.mesh.position.distanceTo(v.mesh.position);
+          const dst = particle.predictedPosition.distanceTo(
+            v.predictedPosition
+          );
 
           d += this.getInfluenceValue(dst);
         }
@@ -105,18 +111,26 @@ export class GroundSimulation extends World {
 
     this.particlesList.forEach((v, i) => {
       if (index != i) {
-        const dst = v.mesh.position.distanceTo(particle.mesh.position);
+        const dst = v.predictedPosition.distanceTo(particle.predictedPosition);
 
-        const dir = new Vector3()
-          .add(v.mesh.position)
-          .sub(particle.mesh.position)
-          .divideScalar(dst);
+        const dir =
+          dst == 0
+            ? new Vector3(
+                Math.random() * 2 - 1,
+                Math.random() * 2 - 1,
+                Math.random() * 2 - 1
+              )
+            : new Vector3()
+                .add(v.predictedPosition)
+                .sub(particle.predictedPosition)
+                .divideScalar(dst);
 
         const slope = this.getInfluenceValueSlope(dst);
 
-        const pressureValue =
-          Math.abs(particle.density - SIMULATION_ATTRIBUTES.targetDensity) *
-          SIMULATION_ATTRIBUTES.pressureMultiplier;
+        const pressureValue = this.calculateSharedPressure(
+          v.density,
+          particle.density
+        );
 
         pressure.add(
           new Vector3()
@@ -129,6 +143,18 @@ export class GroundSimulation extends World {
     });
 
     return pressure;
+  }
+
+  private calculateSharedPressure(densityA: number, densityB: number) {
+    const pressureValueA =
+      Math.abs(densityA - SIMULATION_ATTRIBUTES.targetDensity) *
+      SIMULATION_ATTRIBUTES.pressureMultiplier;
+
+    const pressureValueB =
+      Math.abs(densityB - SIMULATION_ATTRIBUTES.targetDensity) *
+      SIMULATION_ATTRIBUTES.pressureMultiplier;
+
+    return (pressureValueA + pressureValueB) / 2;
   }
 
   private getInfluenceValue(dst: number) {
