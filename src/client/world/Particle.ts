@@ -13,7 +13,7 @@ import {
   SIMULATION_ATTRIBUTES,
   VELOCITY_DAMPEN_VALUE,
 } from "../config/constants";
-import { colorLerp } from "../utils/math";
+import { colorLerp, randomRange } from "../utils/math";
 
 export class Particle {
   public mesh: Mesh<SphereGeometry, MeshStandardMaterial>;
@@ -37,6 +37,31 @@ export class Particle {
   }
 
   public update() {
+    if (this.density > SIMULATION_ATTRIBUTES.targetDensity) {
+      const pressure = this.density / SIMULATION_ATTRIBUTES.targetDensity;
+
+      this.velocity = this.velocity.add(
+        new Vector3(
+          pressure *
+            randomRange(-1, 1) *
+            SIMULATION_ATTRIBUTES.pressureMultiplier,
+          pressure *
+            randomRange(-1, 1) *
+            SIMULATION_ATTRIBUTES.pressureMultiplier,
+          pressure *
+            randomRange(-1, 1) *
+            SIMULATION_ATTRIBUTES.pressureMultiplier
+        )
+      );
+    } else {
+      this.velocity = new Vector3(
+        this.velocity.x * SIMULATION_ATTRIBUTES.dragMultiplier,
+        this.velocity.y * SIMULATION_ATTRIBUTES.dragMultiplier,
+        // this.velocity.y,
+        this.velocity.z * SIMULATION_ATTRIBUTES.dragMultiplier
+      );
+    }
+
     this.velocity.add(GRAVITY_VALUE);
 
     this.mesh.position.add(this.velocity);
