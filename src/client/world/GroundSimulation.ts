@@ -69,6 +69,8 @@ export class GroundSimulation extends World {
 
     this.calculateDensities();
 
+    this.applyPressureToAllParticles();
+
     this.particlesList.forEach((element) => {
       element.update();
     });
@@ -89,6 +91,46 @@ export class GroundSimulation extends World {
     });
   }
 
+  private applyPressureToAllParticles() {
+    this.particlesList.forEach((particle, i) => {
+      particle.velocity.add(
+        this.calculateParticlePressure(i).divideScalar(particle.density)
+      );
+    });
+  }
+
+  private calculateParticlePressure(index: number) {
+    const particle = this.particlesList[index];
+    let pressure = new Vector3();
+
+    this.particlesList.forEach((v, i) => {
+      if (index != i) {
+        const dst = v.mesh.position.distanceTo(particle.mesh.position);
+
+        const dir = new Vector3()
+          .add(v.mesh.position)
+          .sub(particle.mesh.position)
+          .divideScalar(dst);
+
+        const slope = this.getInfluenceValueSlope(dst);
+
+        const pressureValue =
+          Math.abs(particle.density - SIMULATION_ATTRIBUTES.targetDensity) *
+          SIMULATION_ATTRIBUTES.pressureMultiplier;
+
+        pressure.add(
+          new Vector3()
+            .addScalar(pressureValue)
+            .multiply(dir)
+            .multiplyScalar(slope)
+            .divideScalar(particle.density)
+        );
+      }
+    });
+
+    return pressure;
+  }
+
   private getInfluenceValue(dst: number) {
     const radius = SIMULATION_ATTRIBUTES.influenceRadius;
 
@@ -98,6 +140,17 @@ export class GroundSimulation extends World {
       return v * v * scale;
     }
 
+    return 0;
+  }
+
+  private getInfluenceValueSlope(dst: number) {
+    const radius = SIMULATION_ATTRIBUTES.influenceRadius;
+
+    if (dst <= radius) {
+      const scale = 15 / (Math.pow(radius, 5) * Math.PI);
+      const v = radius - dst;
+      return -v * scale;
+    }
     return 0;
   }
 }

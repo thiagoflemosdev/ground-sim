@@ -37,34 +37,11 @@ export class Particle {
   }
 
   public update() {
-    if (this.density > SIMULATION_ATTRIBUTES.targetDensity) {
-      const pressure = this.density / SIMULATION_ATTRIBUTES.targetDensity;
-
-      this.velocity = this.velocity.add(
-        new Vector3(
-          pressure *
-            randomRange(-1, 1) *
-            SIMULATION_ATTRIBUTES.pressureMultiplier,
-          pressure *
-            randomRange(-1, 1) *
-            SIMULATION_ATTRIBUTES.pressureMultiplier,
-          pressure *
-            randomRange(-1, 1) *
-            SIMULATION_ATTRIBUTES.pressureMultiplier
-        )
-      );
-    } else {
-      this.velocity = new Vector3(
-        this.velocity.x * SIMULATION_ATTRIBUTES.dragMultiplier,
-        this.velocity.y * SIMULATION_ATTRIBUTES.dragMultiplier,
-        // this.velocity.y,
-        this.velocity.z * SIMULATION_ATTRIBUTES.dragMultiplier
-      );
-    }
-
     this.velocity.add(GRAVITY_VALUE);
 
     this.mesh.position.add(this.velocity);
+
+    this.velocity.multiply(SIMULATION_ATTRIBUTES.dragMultiplier);
 
     this.mesh.material.color = this.getColor();
 
