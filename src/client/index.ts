@@ -1,8 +1,5 @@
-import {
-  PARTICLES_SPAWNER_ATTRIBUTES,
-  SIMULATION_ATTRIBUTES,
-} from "./config/constants";
 import { AssetsController } from "./controllers/AssetsController";
+import { DebugController } from "./controllers/DebugController";
 import { GroundSimulation } from "./world/GroundSimulation";
 
 async function init() {
@@ -10,54 +7,34 @@ async function init() {
 
   const world = new GroundSimulation();
 
-  document.getElementById("reset")?.addEventListener("click", (e: Event) => {
-    world.clearParticles();
-    world.drawParticles();
-  });
-
-  document.getElementById("quantity")?.addEventListener("input", (e: Event) => {
-    //@ts-ignore
-    PARTICLES_SPAWNER_ATTRIBUTES.quantity = e.target?.value;
-  });
-
-  document.getElementById("width")?.addEventListener("input", (e: Event) => {
-    //@ts-ignore
-    PARTICLES_SPAWNER_ATTRIBUTES.width = e.target?.value;
-  });
-
-  document.getElementById("depth")?.addEventListener("input", (e: Event) => {
-    //@ts-ignore
-    PARTICLES_SPAWNER_ATTRIBUTES.depth = e.target?.value;
-  });
-
-  document.getElementById("height")?.addEventListener("input", (e: Event) => {
-    //@ts-ignore
-    PARTICLES_SPAWNER_ATTRIBUTES.height = e.target?.value;
-  });
-
-  document
-    .getElementById("influenceRadius")
-    ?.addEventListener("input", (e: Event) => {
-      //@ts-ignore
-      SIMULATION_ATTRIBUTES.influenceRadius = e.target?.value;
-    });
-
-  document
-    .getElementById("targetDensity")
-    ?.addEventListener("input", (e: Event) => {
-      //@ts-ignore
-      SIMULATION_ATTRIBUTES.targetDensity = e.target?.value / 100;
-    });
-
-  document
-    .getElementById("pressureMultiplier")
-    ?.addEventListener("input", (e: Event) => {
-      //@ts-ignore
-      SIMULATION_ATTRIBUTES.pressureMultiplier = e.target?.value / 10000;
-    });
+  DebugController.init(world);
 
   world.init();
   world.drawParticles();
+
+  window.addEventListener("keydown", (e) => {
+    if (e.code == "MetaRight") {
+      world.forceEnabled = true;
+    }
+  });
+
+  window.addEventListener("keyup", (e) => {
+    if (e.code == "MetaRight") {
+      world.forceEnabled = false;
+    }
+  });
+
+  window.addEventListener("pointermove", (e) => {
+    const PANEL_SIZE = 150;
+
+    const width = window.innerWidth;
+    const height = window.innerHeight - PANEL_SIZE;
+
+    world.cursor.set(
+      (e.clientX / width) * 2 - 1,
+      -((e.clientY - PANEL_SIZE) / height) * 2 + 1
+    );
+  });
 }
 
 init();

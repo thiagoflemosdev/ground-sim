@@ -18,8 +18,10 @@ import { colorLerp } from "../utils/math";
 export class Particle {
   public mesh: Mesh<SphereGeometry, MeshStandardMaterial>;
   public velocity = new Vector3();
-  public density: number = MIN_DENSITY;
+  public density = MIN_DENSITY;
   public predictedPosition: Vector3;
+  public sortIndex = "";
+  public index = 0;
 
   constructor(position: Vector3) {
     const geometry = new SphereGeometry(PARTICLE_RADIUS);
@@ -46,9 +48,9 @@ export class Particle {
 
     this.velocity.multiply(SIMULATION_ATTRIBUTES.dragMultiplier);
 
-    this.mesh.material.color = this.getColor();
-
     this.checkCollisions();
+
+    this.mesh.material.color = this.getColor();
   }
 
   public calculatePredictedPosition() {
@@ -57,20 +59,36 @@ export class Particle {
       .add(this.velocity);
   }
 
+  public calculateIndex(index: number) {
+    this.index = index;
+
+    this.sortIndex = `${Math.floor(
+      this.mesh.position.x / SIMULATION_ATTRIBUTES.influenceRadius
+    )}|${Math.floor(
+      this.mesh.position.y / SIMULATION_ATTRIBUTES.influenceRadius
+    )}|${Math.floor(
+      this.mesh.position.z / SIMULATION_ATTRIBUTES.influenceRadius
+    )}`;
+  }
+
   private getColor() {
-    if (this.density > SIMULATION_ATTRIBUTES.targetDensity) {
-      return colorLerp(
-        new Color(1, 0, 0),
-        new Color(1, 1, 1),
-        SIMULATION_ATTRIBUTES.targetDensity / this.density
-      );
-    } else {
-      return colorLerp(
-        new Color(0, 0, 1),
-        new Color(1, 1, 1),
-        this.density / SIMULATION_ATTRIBUTES.targetDensity
-      );
-    }
+    const v = Math.max(this.velocity.x, this.velocity.y, this.velocity.z);
+    const max = 0.2;
+    return colorLerp(new Color(0, 0, 0), new Color(0, 1, 0), v / max);
+
+    // if (this.density > SIMULATION_ATTRIBUTES.targetDensity) {
+    //   return colorLerp(
+    //     new Color(1, 0, 0),
+    //     new Color(1, 1, 1),
+    //     SIMULATION_ATTRIBUTES.targetDensity / this.density
+    //   );
+    // } else {
+    //   return colorLerp(
+    //     new Color(0, 0, 1),
+    //     new Color(1, 1, 1),
+    //     this.density / SIMULATION_ATTRIBUTES.targetDensity
+    //   );
+    // }
   }
 
   private checkCollisions() {

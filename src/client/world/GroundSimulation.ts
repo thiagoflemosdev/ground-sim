@@ -1,4 +1,14 @@
-import { Mesh, MeshStandardMaterial, PlaneGeometry, Vector3 } from "three";
+import {
+  Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  PlaneGeometry,
+  Raycaster,
+  Sphere,
+  SphereGeometry,
+  Vector2,
+  Vector3,
+} from "three";
 import {
   MIN_DENSITY,
   PARTICLES_SPAWNER_ATTRIBUTES,
@@ -11,6 +21,13 @@ import { World } from "./World";
 
 export class GroundSimulation extends World {
   private particlesList: Particle[] = [];
+  private map: Record<string, Particle[]> = {};
+  private force: { position: Vector3; density: number }[] = [];
+  private raycaster = new Raycaster();
+  public cursor = new Vector2();
+  public forceEnabled = false;
+
+  private test: Mesh | null = null;
 
   public init() {
     super.init();
@@ -26,6 +43,11 @@ export class GroundSimulation extends World {
     mesh.position.y = -PARTICLE_RADIUS;
     mesh.receiveShadow = true;
     this.scene.add(mesh);
+
+    const sgeometry = new SphereGeometry(1, 32, 16);
+    const material = new MeshBasicMaterial({ color: 0xffff00 });
+    this.test = new Mesh(sgeometry, material);
+    // this.scene.add(this.test);
   }
 
   public clearParticles() {
@@ -65,15 +87,29 @@ export class GroundSimulation extends World {
   }
 
   protected update() {
+    this.map = {};
     super.update();
 
-    this.particlesList.forEach((element) => {
+    this.particlesList.forEach((element, i) => {
       element.calculatePredictedPosition();
+      element.calculateIndex(i);
+
+      if (this.map[element.sortIndex]) {
+        this.map[element.sortIndex].push(element);
+      } else {
+        this.map[element.sortIndex] = [element];
+      }
     });
 
     this.calculateDensities();
 
     this.applyPressureToAllParticles();
+
+    this.force.splice(0, this.force.length);
+
+    if (this.forceEnabled) {
+      this.applyForce();
+    }
 
     this.particlesList.forEach((element) => {
       element.update();
@@ -81,16 +117,13 @@ export class GroundSimulation extends World {
   }
 
   private calculateDensities() {
-    this.particlesList.forEach((particle, i) => {
+    this.particlesList.forEach((particle) => {
       let d = MIN_DENSITY;
-      this.particlesList.forEach((v, i2) => {
-        if (i != i2) {
-          const dst = particle.predictedPosition.distanceTo(
-            v.predictedPosition
-          );
 
-          d += this.getInfluenceValue(dst);
-        }
+      this.particlesNeighborhoodLoop(particle, (v) => {
+        const dst = particle.predictedPosition.distanceTo(v.predictedPosition);
+
+        d += this.getInfluenceValue(dst);
       });
 
       particle.density = d;
@@ -109,40 +142,58 @@ export class GroundSimulation extends World {
     const particle = this.particlesList[index];
     let pressure = new Vector3();
 
-    this.particlesList.forEach((v, i) => {
-      if (index != i) {
-        const dst = v.predictedPosition.distanceTo(particle.predictedPosition);
-
-        const dir =
-          dst == 0
-            ? new Vector3(
-                Math.random() * 2 - 1,
-                Math.random() * 2 - 1,
-                Math.random() * 2 - 1
-              )
-            : new Vector3()
-                .add(v.predictedPosition)
-                .sub(particle.predictedPosition)
-                .divideScalar(dst);
-
-        const slope = this.getInfluenceValueSlope(dst);
-
-        const pressureValue = this.calculateSharedPressure(
-          v.density,
-          particle.density
-        );
-
-        pressure.add(
-          new Vector3()
-            .addScalar(pressureValue)
-            .multiply(dir)
-            .multiplyScalar(slope)
-            .divideScalar(particle.density)
-        );
-      }
+    this.particlesNeighborhoodLoop(particle, (v) => {
+      this.applyPressureLoop(
+        pressure,
+        particle,
+        v.predictedPosition,
+        v.density
+      );
     });
 
+    if (this.force) {
+      this.force.forEach((v) =>
+        this.applyPressureLoop(pressure, particle, v.position, v.density)
+      );
+    }
+
     return pressure;
+  }
+
+  private applyPressureLoop(
+    pressure: Vector3,
+    particle: Particle,
+    position: Vector3,
+    density: number
+  ) {
+    const dst = position.distanceTo(particle.predictedPosition);
+
+    const dir =
+      dst == 0
+        ? new Vector3(
+            Math.random() * 2 - 1,
+            Math.random() * 2 - 1,
+            Math.random() * 2 - 1
+          )
+        : new Vector3()
+            .add(position)
+            .sub(particle.predictedPosition)
+            .divideScalar(dst);
+
+    const slope = this.getInfluenceValueSlope(dst);
+
+    const pressureValue = this.calculateSharedPressure(
+      density,
+      particle.density
+    );
+
+    pressure.add(
+      new Vector3()
+        .addScalar(pressureValue)
+        .multiply(dir)
+        .multiplyScalar(slope)
+        .divideScalar(particle.density)
+    );
   }
 
   private calculateSharedPressure(densityA: number, densityB: number) {
@@ -155,6 +206,41 @@ export class GroundSimulation extends World {
       SIMULATION_ATTRIBUTES.pressureMultiplier;
 
     return (pressureValueA + pressureValueB) / 2;
+  }
+
+  private particlesNeighborhoodLoop(ref: Particle, cp: (p: Particle) => void) {
+    var count = 0;
+    const pos = ref.sortIndex.split("|").map((v) => Number(v));
+
+    const distance = 2;
+
+    for (let x = pos[0] - distance; x < pos[0] + distance; x++) {
+      for (let y = pos[1] - distance; y < pos[1] + distance; y++) {
+        for (let z = pos[2] - distance; z < pos[2] + distance; z++) {
+          const index = `${x}|${y}|${z}`;
+
+          if (this.map[index]) {
+            this.map[index].forEach((p) => {
+              if (ref.index !== p.index) {
+                count++;
+                cp(p);
+              }
+            });
+          }
+        }
+      }
+    }
+
+    // this.particlesList.forEach((p) => {
+    //   if (ref.index !== p.index) {
+    //     count++;
+    //     cp(p);
+    //   }
+    // });
+
+    // if (ref.index === 0) {
+    //   console.log(count);
+    // }
   }
 
   private getInfluenceValue(dst: number) {
@@ -178,5 +264,33 @@ export class GroundSimulation extends World {
       return -v * scale;
     }
     return 0;
+  }
+  private applyForce() {
+    this.raycaster.setFromCamera(this.cursor, this.camera);
+    const RANGE = 1;
+    const STEP = 0.2;
+
+    const intersects = this.raycaster.intersectObjects(this.scene.children);
+
+    if (intersects.length) {
+      const p = intersects[0].point;
+      // this.test?.position.set(p.x, p.y, p.z);
+
+      this.force.push({
+        position: intersects[0].point,
+        density: 0.2,
+      });
+
+      // for (let x = p.x - RANGE; x < p.x + RANGE; x += STEP) {
+      //   for (let y = p.y - RANGE; y < p.y + RANGE; y += STEP) {
+      //     for (let z = p.z - RANGE; z < p.z + RANGE; z += STEP) {
+      //       this.force.push({
+      //         position: new Vector3(z, y, z),
+      //         density: 0.2,
+      //       });
+      //     }
+      //   }
+      // }
+    }
   }
 }

@@ -1,10 +1,10 @@
 import { Vector3 } from "three";
 
 export const PARTICLES_SPAWNER_ATTRIBUTES = {
-  quantity: 130,
+  quantity: 400,
   width: 10,
   depth: 10,
-  height: 1,
+  height: 10,
 };
 
 export const SIMULATION_ATTRIBUTES = {
