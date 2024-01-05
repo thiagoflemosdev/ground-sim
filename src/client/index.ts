@@ -25,7 +25,7 @@ async function init() {
   });
 
   window.addEventListener("pointermove", (e) => {
-    const PANEL_SIZE = 150;
+    const PANEL_SIZE = 250;
 
     const width = window.innerWidth;
     const height = window.innerHeight - PANEL_SIZE;
