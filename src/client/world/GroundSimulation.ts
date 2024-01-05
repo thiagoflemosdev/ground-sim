@@ -16,12 +16,18 @@ import { randomRange } from "../utils/math";
 import { Particle } from "./Particle";
 import { World } from "./World";
 
+export enum ForceMode {
+  Disabled,
+  Push,
+  Pull,
+}
+
 export class GroundSimulation extends World {
   private particlesList: Particle[] = [];
   private map: Record<string, Particle[]> = {};
   private raycaster = new Raycaster();
   public cursor = new Vector2();
-  public forceEnabled = false;
+  public forceMode = ForceMode.Disabled;
 
   public init() {
     super.init();
@@ -94,7 +100,7 @@ export class GroundSimulation extends World {
 
     this.applyPressureToAllParticles();
 
-    if (this.forceEnabled) {
+    if (this.forceMode !== ForceMode.Disabled) {
       this.applyForce();
     }
 
@@ -253,10 +259,19 @@ export class GroundSimulation extends World {
         const dst = p.distanceTo(v.position);
 
         if (dst <= SIMULATION_ATTRIBUTES.forceRadius) {
-          v.force = new Vector3()
-            .add(v.position)
-            .sub(p)
-            .multiplyScalar((dst / SIMULATION_ATTRIBUTES.forceRadius) * 0.02);
+          if (this.forceMode == ForceMode.Push) {
+            v.force = new Vector3()
+              .add(v.position)
+              .sub(p)
+              .multiplyScalar((dst / SIMULATION_ATTRIBUTES.forceRadius) * 0.01);
+          } else if (this.forceMode == ForceMode.Pull) {
+            v.force = new Vector3()
+              .add(v.position)
+              .sub(p)
+              .multiplyScalar(
+                (dst / SIMULATION_ATTRIBUTES.forceRadius) * -0.002
+              );
+          }
         }
       });
     }

@@ -1,6 +1,6 @@
 import { AssetsController } from "./controllers/AssetsController";
 import { DebugController } from "./controllers/DebugController";
-import { GroundSimulation } from "./world/GroundSimulation";
+import { ForceMode, GroundSimulation } from "./world/GroundSimulation";
 
 async function init() {
   await AssetsController.init();
@@ -13,14 +13,21 @@ async function init() {
   world.drawParticles();
 
   window.addEventListener("keydown", (e) => {
+    console.log(e.code);
     if (e.code == "MetaRight" || e.code == "ControlLeft") {
-      world.forceEnabled = true;
+      world.forceMode = ForceMode.Push;
+    } else if (e.code == "ShiftLeft") {
+      world.forceMode = ForceMode.Pull;
     }
   });
 
   window.addEventListener("keyup", (e) => {
-    if (e.code == "MetaRight" || e.code == "ControlLeft") {
-      world.forceEnabled = false;
+    if (
+      e.code == "MetaRight" ||
+      e.code == "ControlLeft" ||
+      e.code == "ShiftLeft"
+    ) {
+      world.forceMode = ForceMode.Disabled;
     }
   });
 
