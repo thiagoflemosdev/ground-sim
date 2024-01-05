@@ -32,26 +32,5 @@ export class DebugController {
       //@ts-ignore
       PARTICLES_SPAWNER_ATTRIBUTES.height = e.target?.value;
     });
-
-    document
-      .getElementById("influenceRadius")
-      ?.addEventListener("input", (e: Event) => {
-        //@ts-ignore
-        SIMULATION_ATTRIBUTES.influenceRadius = e.target?.value;
-      });
-
-    document
-      .getElementById("targetDensity")
-      ?.addEventListener("input", (e: Event) => {
-        //@ts-ignore
-        SIMULATION_ATTRIBUTES.targetDensity = e.target?.value / 100;
-      });
-
-    document
-      .getElementById("pressureMultiplier")
-      ?.addEventListener("input", (e: Event) => {
-        //@ts-ignore
-        SIMULATION_ATTRIBUTES.pressureMultiplier = e.target?.value / 10000;
-      });
   }
 }

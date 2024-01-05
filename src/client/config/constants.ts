@@ -4,7 +4,7 @@ export const PARTICLES_SPAWNER_ATTRIBUTES = {
   quantity: 400,
   width: 10,
   depth: 10,
-  height: 10,
+  height: 5,
 };
 
 export const SIMULATION_ATTRIBUTES = {
