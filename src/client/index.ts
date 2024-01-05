@@ -13,19 +13,19 @@ async function init() {
   world.drawParticles();
 
   window.addEventListener("keydown", (e) => {
-    if (e.code == "MetaRight") {
+    if (e.code == "MetaRight" || e.code == "ControlLeft") {
       world.forceEnabled = true;
     }
   });
 
   window.addEventListener("keyup", (e) => {
-    if (e.code == "MetaRight") {
+    if (e.code == "MetaRight" || e.code == "ControlLeft") {
       world.forceEnabled = false;
     }
   });
 
   window.addEventListener("pointermove", (e) => {
-    const PANEL_SIZE = 250;
+    const PANEL_SIZE = 130;
 
     const width = window.innerWidth;
     const height = window.innerHeight - PANEL_SIZE;

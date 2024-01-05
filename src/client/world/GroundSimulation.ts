@@ -1,11 +1,8 @@
 import {
   Mesh,
-  MeshBasicMaterial,
   MeshStandardMaterial,
   PlaneGeometry,
   Raycaster,
-  Sphere,
-  SphereGeometry,
   Vector2,
   Vector3,
 } from "three";
@@ -22,7 +19,6 @@ import { World } from "./World";
 export class GroundSimulation extends World {
   private particlesList: Particle[] = [];
   private map: Record<string, Particle[]> = {};
-  private force: { position: Vector3; density: number }[] = [];
   private raycaster = new Raycaster();
   public cursor = new Vector2();
   public forceEnabled = false;
@@ -98,8 +94,6 @@ export class GroundSimulation extends World {
 
     this.applyPressureToAllParticles();
 
-    this.force.splice(0, this.force.length);
-
     if (this.forceEnabled) {
       this.applyForce();
     }
@@ -143,12 +137,6 @@ export class GroundSimulation extends World {
         v.density
       );
     });
-
-    if (this.force) {
-      this.force.forEach((v) =>
-        this.applyPressureLoop(pressure, particle, v.position, v.density)
-      );
-    }
 
     return pressure;
   }
@@ -252,6 +240,7 @@ export class GroundSimulation extends World {
     }
     return 0;
   }
+
   private applyForce() {
     this.raycaster.setFromCamera(this.cursor, this.camera);
 
@@ -260,9 +249,15 @@ export class GroundSimulation extends World {
     if (intersects.length) {
       const p = intersects[0].point;
 
-      this.force.push({
-        position: p,
-        density: 0.2,
+      this.particlesList.forEach((v) => {
+        const dst = p.distanceTo(v.position);
+
+        if (dst <= SIMULATION_ATTRIBUTES.forceRadius) {
+          v.force = new Vector3()
+            .add(v.position)
+            .sub(p)
+            .multiplyScalar((dst / SIMULATION_ATTRIBUTES.forceRadius) * 0.02);
+        }
       });
     }
   }

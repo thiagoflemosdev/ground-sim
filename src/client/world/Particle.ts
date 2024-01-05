@@ -18,6 +18,7 @@ import { colorLerp } from "../utils/math";
 export class Particle {
   public mesh: Mesh<SphereGeometry, MeshStandardMaterial>;
   public velocity = new Vector3();
+  public force = new Vector3();
   public density = MIN_DENSITY;
   public predictedPosition: Vector3;
   public sortIndex = "";
@@ -43,10 +44,11 @@ export class Particle {
 
   public update() {
     this.velocity.add(GRAVITY_VALUE);
+    this.velocity.add(this.force);
 
     this.mesh.position.add(this.velocity);
 
-    this.velocity.multiply(SIMULATION_ATTRIBUTES.dragMultiplier);
+    this.force.multiplyScalar(SIMULATION_ATTRIBUTES.forceDragMultipler);
 
     this.checkCollisions();
 

@@ -11,8 +11,8 @@ export const SIMULATION_ATTRIBUTES = {
   influenceRadius: 1,
   targetDensity: 0.2,
   pressureMultiplier: 0.01,
-  dragMultiplier: new Vector3(1, 1, 1),
-  // dragMultiplier: new Vector3(0.9, 1, 0.9),
+  forceDragMultipler: 0.2,
+  forceRadius: 3,
 };
 
 export const VELOCITY_DAMPEN_VALUE = 0.7;
