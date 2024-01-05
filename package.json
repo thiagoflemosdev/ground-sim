@@ -1,7 +1,7 @@
 {
   "name": "ground-sim",
   "version": "0.0.1",
-  "description": "",
+  "description": "cpu warmer",
   "scripts": {
     "build-static": "yarn build && cp -r public/ build && cp dist/client/bundle.js build/",
     "build": "webpack --config ./src/client/webpack.prod.js",
