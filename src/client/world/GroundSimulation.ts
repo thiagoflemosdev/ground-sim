@@ -27,8 +27,6 @@ export class GroundSimulation extends World {
   public cursor = new Vector2();
   public forceEnabled = false;
 
-  private test: Mesh | null = null;
-
   public init() {
     super.init();
 
@@ -43,11 +41,6 @@ export class GroundSimulation extends World {
     mesh.position.y = -PARTICLE_RADIUS;
     mesh.receiveShadow = true;
     this.scene.add(mesh);
-
-    const sgeometry = new SphereGeometry(1, 32, 16);
-    const material = new MeshBasicMaterial({ color: 0xffff00 });
-    this.test = new Mesh(sgeometry, material);
-    // this.scene.add(this.test);
   }
 
   public clearParticles() {
@@ -209,7 +202,6 @@ export class GroundSimulation extends World {
   }
 
   private particlesNeighborhoodLoop(ref: Particle, cp: (p: Particle) => void) {
-    var count = 0;
     const pos = ref.sortIndex.split("|").map((v) => Number(v));
 
     const distance = 2;
@@ -222,7 +214,6 @@ export class GroundSimulation extends World {
           if (this.map[index]) {
             this.map[index].forEach((p) => {
               if (ref.index !== p.index) {
-                count++;
                 cp(p);
               }
             });
@@ -237,10 +228,6 @@ export class GroundSimulation extends World {
     //     cp(p);
     //   }
     // });
-
-    // if (ref.index === 0) {
-    //   console.log(count);
-    // }
   }
 
   private getInfluenceValue(dst: number) {
@@ -267,30 +254,16 @@ export class GroundSimulation extends World {
   }
   private applyForce() {
     this.raycaster.setFromCamera(this.cursor, this.camera);
-    const RANGE = 1;
-    const STEP = 0.2;
 
     const intersects = this.raycaster.intersectObjects(this.scene.children);
 
     if (intersects.length) {
       const p = intersects[0].point;
-      // this.test?.position.set(p.x, p.y, p.z);
 
       this.force.push({
-        position: intersects[0].point,
+        position: p,
         density: 0.2,
       });
-
-      // for (let x = p.x - RANGE; x < p.x + RANGE; x += STEP) {
-      //   for (let y = p.y - RANGE; y < p.y + RANGE; y += STEP) {
-      //     for (let z = p.z - RANGE; z < p.z + RANGE; z += STEP) {
-      //       this.force.push({
-      //         position: new Vector3(z, y, z),
-      //         density: 0.2,
-      //       });
-      //     }
-      //   }
-      // }
     }
   }
 }
