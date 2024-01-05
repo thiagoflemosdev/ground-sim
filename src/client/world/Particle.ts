@@ -48,6 +48,7 @@ export class Particle {
 
     this.mesh.position.add(this.velocity);
 
+    this.velocity.multiply(SIMULATION_ATTRIBUTES.dragMultipler);
     this.force.multiplyScalar(SIMULATION_ATTRIBUTES.forceDragMultipler);
 
     this.checkCollisions();

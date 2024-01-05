@@ -198,11 +198,11 @@ export class GroundSimulation extends World {
   private particlesNeighborhoodLoop(ref: Particle, cp: (p: Particle) => void) {
     const pos = ref.sortIndex.split("|").map((v) => Number(v));
 
-    const distance = 2;
+    const distance = 1;
 
-    for (let x = pos[0] - distance; x < pos[0] + distance; x++) {
-      for (let y = pos[1] - distance; y < pos[1] + distance; y++) {
-        for (let z = pos[2] - distance; z < pos[2] + distance; z++) {
+    for (let x = pos[0] - distance; x <= pos[0] + distance; x++) {
+      for (let y = pos[1] - distance; y <= pos[1] + distance; y++) {
+        for (let z = pos[2] - distance; z <= pos[2] + distance; z++) {
           const index = `${x}|${y}|${z}`;
 
           if (this.map[index]) {
@@ -218,7 +218,6 @@ export class GroundSimulation extends World {
 
     // this.particlesList.forEach((p) => {
     //   if (ref.index !== p.index) {
-    //     count++;
     //     cp(p);
     //   }
     // });
@@ -269,7 +268,7 @@ export class GroundSimulation extends World {
               .add(v.position)
               .sub(p)
               .multiplyScalar(
-                (dst / SIMULATION_ATTRIBUTES.forceRadius) * -0.002
+                (dst / SIMULATION_ATTRIBUTES.forceRadius) * -0.005
               );
           }
         }

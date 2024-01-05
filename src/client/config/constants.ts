@@ -1,16 +1,17 @@
 import { Vector3 } from "three";
 
 export const PARTICLES_SPAWNER_ATTRIBUTES = {
-  quantity: 400,
+  quantity: 1100,
   width: 10,
   depth: 10,
-  height: 5,
+  height: 10,
 };
 
 export const SIMULATION_ATTRIBUTES = {
   influenceRadius: 1,
   targetDensity: 0.2,
   pressureMultiplier: 0.01,
+  dragMultipler: new Vector3(1, 1, 1),
   forceDragMultipler: 0.2,
   forceRadius: 3,
 };
